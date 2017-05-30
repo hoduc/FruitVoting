@@ -59,7 +59,9 @@ Fruit Voting -- Upvote your best fruit
  PineApple | 10
  Banana | 0
 
-> python sample_data.py
+> python app.py
+
+> python sample_data.py  #### In another terminal
  
 * Once User log in, next to each votes, number dial will appear to vote. Click submit to vote. **NOTE**: Any number <= 0 will be ignored.    
 
