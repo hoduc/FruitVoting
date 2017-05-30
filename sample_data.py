@@ -1,7 +1,7 @@
-from app2 import db
-from app2 import User
-from app2 import Fruit
-from app2 import Vote
+from app import db
+from app import User
+from app import Fruit
+from app import Vote
 
 
 
