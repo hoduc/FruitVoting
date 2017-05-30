@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+{% block body %}
+  <form action="" method=post class="form-horizontal">
+    <h2>Create New Todo</h2>
+    <div class="control-group">
+        <div class="controls">
+          <input type="text" id="title" name="title" class="input-xlarge"
+            placeholder="Fruit Name" value="{{ request.form.title }}"
+            required>
+        </div>
+    </div>
+ 
+    <div class="control-group">
+        <div class="controls">
+          <button type="submit" class="btn btn-success">Create Fruit!!!</button>
+          <a href="{{ url_for('index') }}">Back to list</a>
+        </div>
+    </div>
+  </form>
+{% endblock %}

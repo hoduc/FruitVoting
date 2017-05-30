@@ -1,0 +1,47 @@
+<!doctype html>
+<title>Fruit Voting</title>
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+<meta charset="utf-8">
+
+<link href="/static/bootstrap.min.css" rel="stylesheet">
+<script src="/static/jquery-1.9.1.min.js"></script>
+<script src="/static/bootstrap.min.js"></script>
+ 
+<div class="navbar navbar-inverse navbar-fixed-top">
+        <div class="navbar-inner">
+            <div class="container">
+                <a class="brand" href="/">Fruit Voting App</a>
+		{% if g.user.is_authenticated %}
+		   Hello {{g.user.username}}
+		{% endif %}
+		
+                <div class="nav">
+                        <a href="/" class="btn btn-primary">Home</a>
+			{% if g.user.is_authenticated %}
+			  <a href="{{ url_for('history') }}" class="btn btn-info">History</a>
+			   <a href="{{ url_for('logout') }}" class="btn btn-primary">Logout</a>
+			   <!--{% if g.user.is_admin %}
+			      <a href="/create_fruit">New Fruit</a>
+			   {% endif %}-->
+			{% endif %}
+			{% if not g.user.is_authenticated %}
+			   <a href="{{ url_for('login') }}" class="btn btn-primary">Log In</a>
+			{% endif %}
+                </div>
+                <!--/.nav-->
+            </div>
+        </div>
+</div>
+ 
+{%- for category, message in get_flashed_messages(with_categories=true) %}
+  <p class="flask {{ category }}-flash">{{
+    "Error: " if category == 'error' }}{{ message }}</p>
+{%- endfor %}
+<div id="main" class="container">
+    {% block body %}{% endblock %}
+    <hr>
+    <footer id="footer">
+      <p>Fruit Voting.</p>
+      <p>Flask, PostGreSQL, BootStrap, SQLAlchemy.</p>
+    </footer>
+</div>
