@@ -153,13 +153,17 @@ def vote():
         new_vote = int(new_vote.decode('utf-8'))
         if new_vote <= 0:
             continue
+        is_new_fruit = True
         for v in g.user.votes:
             if v.fruit.name == fruit_name:
                 print("fruit:" + fruit_name + " changed!!!")
                 v.vote_count += new_vote
                 db.session.add(v)
                 changed_count += 1
-                continue
+                is_new_fruit = False
+                break
+        if not is_new_fruit:
+            continue
         #never ever vote for this yet
         print("new fruit:" + fruit_name + "=>" + str(new_vote))
         fruit_db = Fruit.query.filter_by(name=fruit_name).first()
