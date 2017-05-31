@@ -1,13 +1,26 @@
 {% extends "layout.html" %}
-<html>
-  <head>
-    <title>Login Page</title>
-  </head>
-  <body>
-    <form action="{{ url_for('login') }}" method="POST">
-      <input type="text" name="email" />
-      <input type="password" name="password" />
-      {{ form.csrf_token }}
-    </form>
-  </body>
-</html>
+{% block body %}
+  <form action="" method=post class="form-horizontal">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    <h2>Signin to Proceed</h2>
+    <div class="control-group">
+        <div class="controls">
+          <input type="text" id="username" name="username" class="input-xlarge"
+            placeholder="Username" required>
+        </div>
+    </div>
+ 
+    <div class="control-group">
+        <div class="controls">
+          <input type="password" id="password" name="password" class="input-xlarge"
+            placeholder="Password" required>
+        </div>
+    </div>
+ 
+    <div class="control-group">
+        <div class="controls">
+          <button type="submit" class="btn btn-success">Register</button>
+        </div>
+    </div>
+  </form>
+{% endblock %}

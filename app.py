@@ -2,90 +2,33 @@ from flask import Flask, abort, request, jsonify, g, url_for, render_template, f
 from flask_wtf import FlaskForm, CSRFProtect
 from wtforms import TextField, PasswordField
 from wtforms.validators import Required, Email
-from flask_bcrypt import bcrypt
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.ext.hybrid import hybrid_property
 from flask_login import LoginManager, login_user, logout_user, current_user, login_required
+from models import Fruit, User, Vote, VoteUI, HistoryUI, db
 
+
+#### CONFIG ############################
 app = Flask(__name__)
-app.config['SECRET_KEY'] = "!jsfhahdkahskdf"
-app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql+psycopg2://postgres:@localhost/fruitvote"
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
+app.config.from_pyfile('config.cfg')
+
+#cross site forgery protect
 csrf = CSRFProtect()
 csrf.init_app(app)
 
+#db
+db.init_app(app)
+#login
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
-db = SQLAlchemy(app)
+#### CONFIG ############################
 
-############ MODELS ##########################
+@app.route('/')
+def index():
+    vote_uis = sorted([VoteUI(fruit) for fruit in Fruit.query.all()], key=lambda x : x.vote_count, reverse=True)
+    return render_template('index.html', fruit_votes=vote_uis)
 
-class Fruit(db.Model):
-    __tablename__ = 'fruits'
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(200), unique=True)
-    
-    def __init__(self, name):
-        self.name = name
-    
-class User(db.Model):
-    __tablename__ = 'users'
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    username = db.Column(db.String(64), unique=True)
-    password = db.Column(db.String(128), unique=True)
-    is_admin = db.Column(db.Boolean, unique=False, default=False) 
-
-    def __init__(self, username, password, is_admin):
-        self.username = username
-        self.password = bcrypt.hashpw(password, bcrypt.gensalt())
-        self.is_admin = is_admin
-
-    #overide methods for flask-login
-    def is_authenticated(self):
-        return True
-    def is_active(self):
-        return True
-    def is_anonymous(self):
-        return False
-    def get_id(self):
-        return unicode(self.id)
-    def __repr__(self):
-        return '[User : %r]' % (self.username)
-
-
-class Vote(db.Model):
-    __tablename__ = 'votes'
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    user = db.relationship('User', backref=db.backref('votes', lazy='dynamic'))
-    fruit_id = db.Column(db.Integer, db.ForeignKey('fruits.id'))
-    fruit = db.relationship('Fruit', backref=db.backref('votes', lazy='dynamic'))
-    vote_count = db.Column(db.Integer, nullable=False)
-
-    def __init__(self, user, fruit, vote_count = 0):
-        self.user = user
-        self.fruit = fruit
-        self.vote_count = vote_count
-
-    def __repr__(self):
-        return '[User : %r / Fruit : %r / Vote_count : %r]' % (self.user, self.fruit, self.vote_count)
-
-class VoteUI:
-    def __init__(self, fruit):
-        print("fruit_name:" + fruit.name)
-        for vote in fruit.votes:
-            print("vc:" + str(vote.vote_count))
-        self.name = fruit.name
-        self.vote_count = sum([vote.vote_count for vote in fruit.votes])
-
-class HistoryUI:
-    def __init__(self, vote):
-       self.fruit_name = vote.fruit.name
-       self.vote_count = vote.vote_count
-       
-       
-############ END MODELS ##########################
 
 @login_manager.user_loader
 def get_user(user_id):
@@ -94,14 +37,24 @@ def get_user(user_id):
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'GET':
-        return render_template("login.html")
-    user = User(request.form['username'], request.form['password'])
+        return render_template("signup.html")
+    username = request.form['username'].encode('utf-8')
+    password = request.form['password'].encode('utf-8')
+    #check if user exist
+    user_db = User.query.filter_by(username=username).first()
+    if user_db:
+        flash("User already existed!!!")
+        return render_template("signup.html")
+    
+    user = User(username, password)
     db.session.add(user)
     db.session.commit()
-    flash('Done register!!!')
-    return redirect(url_for('login'))
+    login_user(user)
+    #flash('Done register!!!')
+    return redirect(url_for('index'))
 
 @app.route('/login', methods=['GET', 'POST'])
+@login_required
 def login():
     if request.method == 'GET':
         return render_template('login.html')
@@ -116,6 +69,7 @@ def login():
     return redirect(request.args.get('next') or url_for('index'))
 
 @app.route('/logout')
+@login_required
 def logout():
     logout_user()
     return redirect(url_for('index'))
@@ -138,10 +92,7 @@ def history():
     return render_template('history.html', user_fruit_votes=user_fruit_votes_uis)
     
 
-@app.route('/')
-def index():
-    vote_uis = sorted([VoteUI(fruit) for fruit in Fruit.query.all()], key=lambda x : x.vote_count, reverse=True)
-    return render_template('index.html', fruit_votes=vote_uis)
+
 
 @app.route('/vote', methods=['POST'])
 @login_required

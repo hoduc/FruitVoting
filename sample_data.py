@@ -1,9 +1,4 @@
-from app import db
-from app import User
-from app import Fruit
-from app import Vote
-
-
+from models import Fruit, User, Vote, VoteUI, HistoryUI, db
 
 def insert_data(db, l):
     for e in l:
