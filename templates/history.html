@@ -1,17 +1,22 @@
 {% extends "layout.html" %}
 {% block body %}
+<script>
+  $(function(){
+     $.getJSON("/get_history", function(json_rows){
+        console.log("parsing history");
+        parseJson("result", json_rows);
+     });
+  });
+</script>
 <div id="main" class="container">
     <h2>History Fruit-Votes</h2>
     <table class="table table-hover">
       <tr>
         <th>Fruit
         <th>Votes
-      {% for fv in user_fruit_votes %}
-	<tr>
-	  <td>{{ fv.fruit_name }}</td>
-	  <td>{{ fv.vote_count }}</td>
-	</tr>
-      {% endfor %}
+      </tr>
+      <tbody id="result">
+      </tbody>
     </table>
 </div>
 {% endblock %}

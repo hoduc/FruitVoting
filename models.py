@@ -1,6 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import bcrypt
-db = SQLAlchemy()
+db = SQLAlchemy(session_options={'expire_on_commit' : False}) #avoid DetachedSessionInstanceError
+
 ############ MODELS ##########################
 
 class Fruit(db.Model):
@@ -61,10 +62,34 @@ class VoteUI:
         self.name = fruit.name
         self.vote_count = sum([vote.vote_count for vote in fruit.votes])
 
+    def tojson(self):
+        return {
+            'name' : self.name,
+            'vote_count' : self.vote_count
+        }
+
+    def tojson_authenticated(self):
+        return {
+            "name" : self.name,
+            "vote_count" : self.vote_count,
+            "vote_input" :
+            """<div class="form-group row">
+		 <label for="vote_{0}" class="col-2 col-form-label">Add Votes:</label>
+	      <div class="col-10">
+		<input class="form-control" type="number" name="{1}" value="0" id="vote_{{fv_name}}">
+	      </div>""".format(self.name, self.name)
+        }
+    
+
 class HistoryUI:
     def __init__(self, vote):
        self.fruit_name = vote.fruit.name
        self.vote_count = vote.vote_count
-       
+
+    def tojson(self):
+        return {
+            'fruit_name' : self.fruit_name,
+            'vote_count' : self.vote_count
+        }
        
 ############ END MODELS ##########################

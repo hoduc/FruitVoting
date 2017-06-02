@@ -1,34 +1,49 @@
 {% extends "layout.html" %}
 {% block body %}
+<script>
+  $(function(){
+     $.getJSON("/get_fruit", function(json_rows){
+        parseJson("result", json_rows);
+     });
+  });
+
+  $( document ).ready(function(){
+     var csrf_token = "{{ csrf_token() }}";
+     $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", csrf_token);
+            }
+        }
+     });
+     
+     $("#vote_form").submit(function(event){
+        //event.preventDefault();
+        console.log("im sending post data!!!");
+        $.post("{{url_for('vote')}}",$("#vote_form").serialize(),  function(data){
+           parseJson("result", data);
+        });
+
+        return false;
+     });
+  });
+</script>
 <div id="main" class="container">
     <h2>Fruit-Votes</h2>
     {% if g.user.is_authenticated %}
-    <form action="{{ url_for('vote') }}" method="post">
+    <form id="vote_form" action="{{ url_for('vote') }}" method="post">
     {% endif %}
     <table class="table table-hover">
       <tr>
         <th>Fruit
         <th>Votes
-      {% for fv in fruit_votes %}
-	<tr>
-	  <td>{{ fv.name }}</td>
-	  <td>{{ fv.vote_count }}</td>
-	  {% if g.user.is_authenticated %}
-	     <td>
-	       <div class="form-group row">
-		 <label for="vote_{{fv.name}}" class="col-2 col-form-label">Add Votes:</label>
-	      <div class="col-10">
-		<input class="form-control" type="number" name="{{fv.name}}" value="0" id="vote_{{fv_name}}">
-	      </div>
-</div>
-	     </td>
-	  {% endif %}
-	</tr>
-      {% endfor %}
+      </tr>
+      <tbody id="result">
+      </tbody>
     </table>
     {% if g.user.is_authenticated %}
-       <button class="btn btn-primary" type="submit">Submit Votes</button>
-       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+       <button class="btn btn-primary" type="submit" >Submit Votes</button>
+       <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}"/>
     </form>
     {% endif %}
 </div>

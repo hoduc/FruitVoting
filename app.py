@@ -1,8 +1,9 @@
-from flask import Flask, abort, request, jsonify, g, url_for, render_template, flash, redirect
+from flask import Flask, abort, request, jsonify, g, url_for, render_template, flash, redirect, json,jsonify, make_response
 from flask_wtf import FlaskForm, CSRFProtect
 from wtforms import TextField, PasswordField
 from wtforms.validators import Required, Email
 from flask_sqlalchemy import SQLAlchemy
+from flask_bcrypt import bcrypt
 from sqlalchemy.ext.hybrid import hybrid_property
 from flask_login import LoginManager, login_user, logout_user, current_user, login_required
 from models import Fruit, User, Vote, VoteUI, HistoryUI, db
@@ -10,24 +11,52 @@ from models import Fruit, User, Vote, VoteUI, HistoryUI, db
 
 #### CONFIG ############################
 app = Flask(__name__)
-app.config.from_pyfile('config.cfg')
+with app.app_context():
+    app.config.from_pyfile('config.cfg')
+    #cross site forgery protect
+    csrf = CSRFProtect()
+    csrf.init_app(app)
 
-#cross site forgery protect
-csrf = CSRFProtect()
-csrf.init_app(app)
-
-#db
-db.init_app(app)
-#login
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
+    #db
+    db.init_app(app)
+    #login
+    login_manager = LoginManager()
+    login_manager.init_app(app)
+    login_manager.login_view = 'login'
 #### CONFIG ############################
+
+
+def get_sorted_fruit_votes():
+    sfv = [] #sorted fruit vote
+    try:
+        sfv = sorted([VoteUI(fruit) for fruit in Fruit.query.all()], key=lambda x : x.vote_count, reverse=True)
+    except:
+        pass # some error, dismiss
+    return sfv
+
+def get_sorted_fruit_votes_json():
+    json_objs = jsonify([e.tojson() for e in get_sorted_fruit_votes()])
+    print("json:" + str(json_objs.get_data()))
+    return json_objs
+
+def get_sorted_fruit_votes_json_authenticated():
+    json_objs = jsonify([e.tojson_authenticated() for e in get_sorted_fruit_votes()])
+    print("json:" + str(json_objs.get_data()))
+    return json_objs
+
+def get_votes():
+     #add votes dials if user logged in
+    if g.user.is_authenticated:
+        return get_sorted_fruit_votes_json_authenticated()
+    return get_sorted_fruit_votes_json()
+
+@app.route('/get_fruit')
+def get_all_votes():
+   return get_votes()
 
 @app.route('/')
 def index():
-    vote_uis = sorted([VoteUI(fruit) for fruit in Fruit.query.all()], key=lambda x : x.vote_count, reverse=True)
-    return render_template('index.html', fruit_votes=vote_uis)
+    return render_template("index.html")
 
 
 @login_manager.user_loader
@@ -54,7 +83,6 @@ def signup():
     return redirect(url_for('index'))
 
 @app.route('/login', methods=['GET', 'POST'])
-@login_required
 def login():
     if request.method == 'GET':
         return render_template('login.html')
@@ -85,18 +113,18 @@ def create_fruit():
         return redirect(url_for('index'))
     return render_template('new_fruit.html')
 
+@app.route('/get_history')
+@login_required
+def get_history():
+    user_fruit_votes_uis = sorted([HistoryUI(vote) for vote in Vote.query.filter_by(user_id=g.user.id).all()], key=lambda x : x.vote_count, reverse=True) #Vote class
+    return jsonify([e.tojson() for e in user_fruit_votes_uis])
+
 @app.route('/history')
-@login_required
 def history():
-    user_fruit_votes_uis = [HistoryUI(vote) for vote in Vote.query.filter_by(user_id=g.user.id).all()] #Vote class
-    return render_template('history.html', user_fruit_votes=user_fruit_votes_uis)
-    
+    return render_template('history.html')
 
 
-
-@app.route('/vote', methods=['POST'])
-@login_required
-def vote():
+def detect_change():
     changed_count = 0
     for (fruit_name, new_vote) in request.form.iteritems():
         if fruit_name == 'csrf_token':
@@ -129,11 +157,20 @@ def vote():
             raise
         finally:
             db.session.close()
-    return redirect(url_for('index'))
+    print("finished detect")
+
+@app.route('/vote', methods=['POST'])
+@login_required
+def vote():
+    #with app.app_context():
+    detect_change()
+    return get_votes()
 
 @app.before_request
 def before_request():
+    #current_user = db.session.merge(current_user)
     g.user = current_user
+    #g.user = db.session.merge(g.user)
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -6,7 +6,23 @@
 <link href="/static/bootstrap.min.css" rel="stylesheet">
 <script src="/static/jquery-1.9.1.min.js"></script>
 <script src="/static/bootstrap.min.js"></script>
- 
+
+
+<script>
+  function parseJson(tbodyId, json_rows){
+     var tbody_html = "";
+     $.each(json_rows, function(index, item){
+        var row_html = "";
+         for ( var k in item ) {
+              row_html += "<td>" + item[k] + "</td>";
+         }
+         tbody_html += "<tr>" + row_html + "</tr>";
+         console.log("tbody:" + tbody_html);
+     });
+
+     $("#" + tbodyId).html(tbody_html);
+  }
+</script>
 <div class="navbar navbar-inverse navbar-fixed-top">
         <div class="navbar-inner">
             <div class="container">
