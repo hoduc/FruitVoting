@@ -1,6 +1,7 @@
 {% extends "layout.html" %}
 {% block body %}
 <script>
+
   function open(tag){
      return "<" + tag + ">";
   }
@@ -12,13 +13,13 @@
   function att(k,v){
      return " " + k + "=" + "\"" + v + "\""
   }
-  
-  
+
+
   function gen_input(fruit_name){
      return open( "div" + att( "class", "form-group row" ) ) +
             open( "label" + att( "class", "col-2 col-form-label") ) + "Add Votes:" + close( "label" ) +
             open( "div" + att( "class", "col-10" ) ) +
-            open( "input" + att( "class", "form-control" ) + att( "type", "number" ) + att( "name", fruit_name ) + att( "value", "0" ) +  att( "id", "vote_" + fruit_name ) ) + 
+            open( "input" + att( "class", "form-control" ) + att( "type", "number" ) + att( "name", fruit_name ) + att( "value", "0" ) +  att( "id", "vote_" + fruit_name ) + att( "min", "0" ) ) + 
             close( "div" ) + 
             close( "div" );
   }
@@ -75,6 +76,10 @@
   }
   
 
+  function p_msg( p_id, status, txt = "" ) {
+     $("#" + p_id).attr( "class", "flask " + status + "-flash" );
+     $("#" + p_id).text( txt );
+  }
 
   $(function(){
      getJsonParse("/get_fruit", "result", parseJsonIndex, 5000);
@@ -94,7 +99,13 @@
         //event.preventDefault();
         console.log("im sending post data!!!");
         $.post("{{url_for('vote')}}",$("#vote_form").serialize(),  function(data){
-           parseJsonIndex("result", data);
+           msg = "";
+           console.log("status:" + data["status"]);
+           if (data["status"] == "info"){
+               msg = data["message"];
+           }
+           p_msg( "fetch_msg", data["status"], msg );
+           parseJsonIndex("result", data["values"]);
         });
 
         return false;

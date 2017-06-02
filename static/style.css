@@ -1,0 +1,14 @@
+.success-flash{
+    color: #4F8A10;
+    background-color: #DFF2BF;
+}
+
+.info-flash{
+    color: #00529B;
+    background-color: #BDE5F8;
+}
+
+.error-flash{
+    color: #D8000C;
+    background-color: #FFBABA;
+}

@@ -4,12 +4,13 @@
 <meta charset="utf-8">
 
 <link href="/static/bootstrap.min.css" rel="stylesheet">
+<link href="/static/style.css" rel="stylesheet">
 <script src="/static/jquery-1.9.1.min.js"></script>
 <script src="/static/bootstrap.min.js"></script>
 
 
 <script>
-  //var old_json_rows_length = 0;
+
   function parseJson(tbodyId, json_rows){
      //different length ==> total replace
      
@@ -30,8 +31,7 @@
      console.log("getjson started!!!");
      $.getJSON(link, function(json_rows){
         console.log("finished get json");
-        //console.log( parseFn );
-        parseFn(tbodyId, json_rows);
+        parseFn(tbodyId, json_rows["values"]);
         if (sec){
            setTimeout(function(){
               getJsonParse(link, tbodyId, parseFn, sec);
@@ -40,7 +40,7 @@
      });
   }
 </script>
-<div class="navbar navbar-inverse navbar-fixed-top">
+<div id="nav_bar" class="navbar navbar-inverse navbar-fixed-top">
         <div class="navbar-inner">
             <div class="container">
                 <a class="brand" href="/">Fruit Voting App</a>
@@ -66,7 +66,7 @@
             </div>
         </div>
 </div>
- 
+<p id="fetch_msg" class="flask"></p>
 {%- for category, message in get_flashed_messages(with_categories=true) %}
   <p class="flask {{ category }}-flash">{{
     "Error: " if category == 'error' }}{{ message }}</p>

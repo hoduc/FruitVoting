@@ -34,21 +34,21 @@ def get_sorted_fruit_votes():
         pass # some error, dismiss
     return sfv
 
-def get_sorted_fruit_votes_json():
-    json_objs = jsonify([e.tojson() for e in get_sorted_fruit_votes()])
+def get_sorted_fruit_votes_json(status="success", msg="Get Votes OK"):
+    json_objs = jsonify({"status": status, "message": msg,  "values" : [e.tojson() for e in get_sorted_fruit_votes()]})
     print("json:" + str(json_objs.get_data()))
     return json_objs
 
-def get_sorted_fruit_votes_json_authenticated():
-    json_objs = jsonify([e.tojson_authenticated() for e in get_sorted_fruit_votes()])
+def get_sorted_fruit_votes_json_authenticated(status="success", msg="Get Votes OK"):
+    json_objs = jsonify({ "status" : status, "message" : msg,  "values" : [e.tojson_authenticated() for e in get_sorted_fruit_votes()] })
     print("json:" + str(json_objs.get_data()))
     return json_objs
 
-def get_votes():
+def get_votes(status="success", msg="Get Votes OK"):
      #add votes dials if user logged in
     if g.user.is_authenticated:
-        return get_sorted_fruit_votes_json_authenticated()
-    return get_sorted_fruit_votes_json()
+        return get_sorted_fruit_votes_json_authenticated(status, msg)
+    return get_sorted_fruit_votes_json(status, msg)
 
 @app.route('/get_fruit')
 def get_all_votes():
@@ -93,7 +93,7 @@ def login():
         flash('Username/Password combination is not correct', 'error')
         return redirect(url_for('login'))
     login_user(user_db)
-    flash('Successfully logged in')
+    flash('Successfully logged in', 'success')
     return redirect(request.args.get('next') or url_for('index'))
 
 @app.route('/logout')
@@ -124,6 +124,7 @@ def history():
     return render_template('history.html')
 
 
+#return true if commit to databse
 def detect_change():
     changed_count = 0
     for (fruit_name, new_vote) in request.form.iteritems():
@@ -157,13 +158,18 @@ def detect_change():
             raise
         finally:
             db.session.close()
-    print("finished detect")
+    #print("finished detect")
+    return changed_count > 0
 
 @app.route('/vote', methods=['POST'])
 @login_required
 def vote():
     #with app.app_context():
-    detect_change()
+    if not detect_change():
+        print("NO_CHANGE!!!")
+        #flash('No Changed!!!', categories='info')
+        return get_votes(status="info", msg="No Change!!!")
+    print (" CHANGE!!!" )
     return get_votes()
 
 @app.before_request
