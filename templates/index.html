@@ -1,8 +1,76 @@
 {% extends "layout.html" %}
 {% block body %}
 <script>
+  function open(tag){
+     return "<" + tag + ">";
+  }
+
+  function close(tag){
+     return "</" + tag + ">"
+  }
+
+  function att(k,v){
+     return " " + k + "=" + "\"" + v + "\""
+  }
+  
+  
+  function gen_input(fruit_name){
+     return open( "div" + att( "class", "form-group row" ) ) +
+            open( "label" + att( "for","vote_" + fruit_name ) + att( "class", "col-2 col-form-label") ) + "Add Votes:" + close( "label" ) +
+            open( "div" + att( "class", "col-10" ) ) +
+            open( "input" + att( "class", "form-control" ) + att( "type", "number" ) + att( "name", fruit_name ) + att( "value", "0" ) ) + 
+            close( "div" ) + 
+            close( "div" );
+  }
+
+  
+  var old_json_rows_length = 0;
+  //console.log("old_len:" + old_json_rows_length);
+  function parseJsonIndex(tbodyId, json_rows){
+     //console.log("old_len:" + old_json_rows_length);
+     //different length ==> total replace
+     if (json_rows.length != old_json_rows_length){
+        console.log("!=");
+        var tbody_html = "";
+        $.each(json_rows, function(index, item){
+           var row_html = "";
+           for ( var k in item ) {
+              row_html += "<td>" + item[k] + "</td>";
+           }
+           {% if g.user.is_authenticated %}
+              console.log("hello")
+              row_html += "<td>" + gen_input(item['name']) + "</td>";
+           {% endif %}
+           tbody_html += "<tr>" + row_html + "</tr>";
+        
+        });
+        old_json_rows_length = json_rows.length;
+        $("#" + tbodyId).html(tbody_html);
+    } else { //same length, just replace
+        console.log("=eq");
+        var i = 0;
+        console.log("prev:");
+        console.log($("#" + tbodyId));
+        $("#" + tbodyId).find('tr').each( function() {
+           if ( i == json_rows.length ){
+             return;
+           }
+           var item = json_rows[i];
+           var j = 0;
+           for ( var k in item ){
+              $(this.children[j]).text(item[k]);
+              console.log($(this.children[j]).text());
+              j++;
+           }
+           i++;
+        });
+    }
+  }
+  
+
+
   $(function(){
-     getJsonParse("/get_fruit", "result", 10000);
+     getJsonParse("/get_fruit", "result", parseJsonIndex, 10000);
   });
 
   $( document ).ready(function(){
@@ -19,7 +87,7 @@
         //event.preventDefault();
         console.log("im sending post data!!!");
         $.post("{{url_for('vote')}}",$("#vote_form").serialize(),  function(data){
-           parseJson("result", data);
+           parseJsonIndex("result", data);
         });
 
         return false;

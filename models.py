@@ -72,12 +72,6 @@ class VoteUI:
         return {
             "name" : self.name,
             "vote_count" : self.vote_count,
-            "vote_input" :
-            """<div class="form-group row">
-		 <label for="vote_{0}" class="col-2 col-form-label">Add Votes:</label>
-	      <div class="col-10">
-		<input class="form-control" type="number" name="{1}" value="0" id="vote_{{fv_name}}">
-	      </div>""".format(self.name, self.name)
         }
     
 
