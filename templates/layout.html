@@ -9,6 +9,8 @@
 
 
 <script>
+  var old_json_row = null;
+  
   function parseJson(tbodyId, json_rows){
      var tbody_html = "";
      $.each(json_rows, function(index, item){
@@ -21,6 +23,19 @@
      });
 
      $("#" + tbodyId).html(tbody_html);
+  }
+
+  function getJsonParse(link, tbodyId, sec){
+     console.log("getjson started!!!");
+     $.getJSON(link, function(json_rows){
+        console.log("finished get json");
+        parseJson(tbodyId, json_rows);
+        if (sec){
+           setTimeout(function(){
+              getJsonParse(link, tbodyId, sec);
+           }, sec);
+        }
+     });
   }
 </script>
 <div class="navbar navbar-inverse navbar-fixed-top">

@@ -2,9 +2,7 @@
 {% block body %}
 <script>
   $(function(){
-     $.getJSON("/get_fruit", function(json_rows){
-        parseJson("result", json_rows);
-     });
+     getJsonParse("/get_fruit", "result", 10000);
   });
 
   $( document ).ready(function(){
