@@ -16,9 +16,9 @@
   
   function gen_input(fruit_name){
      return open( "div" + att( "class", "form-group row" ) ) +
-            open( "label" + att( "for","vote_" + fruit_name ) + att( "class", "col-2 col-form-label") ) + "Add Votes:" + close( "label" ) +
+            open( "label" + att( "class", "col-2 col-form-label") ) + "Add Votes:" + close( "label" ) +
             open( "div" + att( "class", "col-10" ) ) +
-            open( "input" + att( "class", "form-control" ) + att( "type", "number" ) + att( "name", fruit_name ) + att( "value", "0" ) ) + 
+            open( "input" + att( "class", "form-control" ) + att( "type", "number" ) + att( "name", fruit_name ) + att( "value", "0" ) +  att( "id", "vote_" + fruit_name ) ) + 
             close( "div" ) + 
             close( "div" );
   }
@@ -62,6 +62,13 @@
               console.log($(this.children[j]).text());
               j++;
            }
+           //changing input field but leave the value
+            {% if g.user.is_authenticated %}
+               $(this.children[j]).find('input').each( function(){
+                  $(this).attr( 'name' , item['name'] );
+                  $(this).attr( 'id', "vote_" + item['name'] );
+               });
+           {% endif %}
            i++;
         });
     }
@@ -70,7 +77,7 @@
 
 
   $(function(){
-     getJsonParse("/get_fruit", "result", parseJsonIndex, 10000);
+     getJsonParse("/get_fruit", "result", parseJsonIndex, 5000);
   });
 
   $( document ).ready(function(){
